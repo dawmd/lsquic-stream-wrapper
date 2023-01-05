@@ -99,11 +99,9 @@ seastar::future<> server::service_loop(quic_stream<quic_stream_value_t> stream) 
     });
 
     return seastar::keep_doing([this, stream]() mutable {
-        logger::flog("MAIN MAIN: Writing to a stream.");
         quic_stream_value_t buffer[0x1000];
         std::memset(buffer, 'A', sizeof(buffer));
         stream.write(buffer, sizeof(buffer));
-        logger::flog("Waiting for some input...");
         return m_channel.receive().then([this](seastar::net::udp_datagram datagram) {
             return handle_receive(std::move(datagram));
         });

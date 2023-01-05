@@ -56,23 +56,21 @@ void on_write(lsquic_stream_t *stream, lsquic_stream_ctx_t *stream_ctx) {
     static std::size_t send_counter = 0;
 
     quic_stream_t *qstream = reinterpret_cast<quic_stream_t*>(stream_ctx);
-    if (!qstream->m_istream.size()) {
-        logger::flog("Returning yet?");
+    if (!qstream->m_ostream.size()) {
         return;
     }
 
-    logger::flog("lsquic_stream_write()!");
     auto write_count = lsquic_stream_write(
         stream,
-        qstream->m_istream.data(),
-        qstream->m_istream.size()
+        qstream->m_ostream.data(),
+        qstream->m_ostream.size()
     );
 
     if (write_count > 0) {
-        qstream->m_istream.drop(write_count);
+        qstream->m_ostream.drop(write_count);
         send_counter += write_count;
 
-        if (!qstream->m_istream.size() && send_counter >= MAX_BYTES_TO_SEND) {
+        if (!qstream->m_ostream.size() && send_counter >= MAX_BYTES_TO_SEND) {
             logger::flog("Finished writing to a stream");
             lsquic_stream_shutdown(stream, 1);
             lsquic_conn_close(lsquic_stream_conn(stream));
